@@ -1,41 +1,106 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register — MedTrack</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 50%, #fda085 100%);
+      display: flex;
+      flex-direction: column;
+    }
+    .reg-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .reg-card {
+      background: white;
+      border-radius: 24px;
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.25);
+    }
+    .reg-header { text-align: center; margin-bottom: 2rem; }
+    .reg-header .icon { font-size: 3rem; margin-bottom: 0.5rem; }
+    .reg-header h2 { font-size: 1.8rem; font-weight: 900; color: var(--dark); }
+    .reg-header p { color: var(--gray); font-size: 0.9rem; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .reg-footer { text-align: center; margin-top: 1.5rem; }
+    .reg-footer a { color: var(--purple); font-weight: 700; text-decoration: none; }
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <a href="/" class="logo"><span>🏥</span> MedTrack</a>
+  <div class="nav-links">
+    <a href="/login" class="btn-nav">Login</a>
+  </div>
+</nav>
 
-{% block content %}
+<div class="reg-wrap">
+  <div class="reg-card">
+    <div class="reg-header">
+      <div class="icon">👤</div>
+      <h2>Create Account</h2>
+      <p>Join MedTrack as a patient today!</p>
+    </div>
 
-<div class="card">
-    <h2 style="text-align:center;">📝 Register</h2>
+    {% if error %}
+    <div class="alert alert-error">⚠️ {{ error }}</div>
+    {% endif %}
 
-    <form method="POST">
+    <form method="POST" action="/register">
+      <div class="two-col">
+        <div class="form-group">
+          <label>👤 Full Name</label>
+          <input type="text" name="name" placeholder="John Smith" required>
+        </div>
+        <div class="form-group">
+          <label>🎂 Age</label>
+          <input type="number" name="age" placeholder="25" min="1" max="120" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>📧 Email Address</label>
+        <input type="email" name="email" placeholder="you@example.com" required>
+      </div>
+      <div class="form-group">
+        <label>🔒 Password</label>
+        <input type="password" name="password" placeholder="Create a strong password" required>
+      </div>
+      <div class="two-col">
+        <div class="form-group">
+          <label>🩸 Blood Type</label>
+          <select name="blood_type" required>
+            <option value="">Select</option>
+            <option>A+</option><option>A-</option>
+            <option>B+</option><option>B-</option>
+            <option>AB+</option><option>AB-</option>
+            <option>O+</option><option>O-</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>📱 Phone Number</label>
+          <input type="tel" name="phone" placeholder="9876543210" required>
+        </div>
+      </div>
 
-        <!-- Full Name -->
-        <label>Full Name</label>
-        <input type="text" name="name" placeholder="Enter your full name" required>
-
-        <!-- Email -->
-        <label>Email</label>
-        <input type="email" name="email" placeholder="Enter your email" required>
-
-        <!-- Password -->
-        <label>Password</label>
-        <input type="password" name="password" placeholder="Create a password" required>
-
-        <!-- Role Selection -->
-        <label>Select Role</label>
-        <select name="role" required>
-            <option value="">-- Select Role --</option>
-            <option value="patient">Patient</option>
-            <option value="doctor">Doctor</option>
-        </select>
-
-        <!-- Submit Button -->
-        <button type="submit" class="btn">Register</button>
-
+      <button type="submit" class="btn btn-primary" style="width:100%; font-size:1rem; padding:0.9rem; margin-top:0.5rem;">
+        🚀 Create My Account
+      </button>
     </form>
 
-    <p style="margin-top:15px; text-align:center;">
-        Already have an account?
-        <a href="/login">Login here</a>
-    </p>
+    <div class="reg-footer">
+      <p>Already have an account? <a href="/login">Login here</a></p>
+    </div>
+  </div>
 </div>
-
-{% endblock %}
+</body>
+</html>
