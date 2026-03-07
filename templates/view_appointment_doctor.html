@@ -1,64 +1,127 @@
 {% extends "base.html" %}
-
 {% block content %}
 
-<h2>👨‍⚕️ Doctor Appointments</h2>
+<div class="dashboard-page" style="background-color:#f0fdf6;">
+    <div style="max-width:1060px;margin:0 auto;">
 
-{% if appointments and appointments|length > 0 %}
+        <div style="font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:900;margin-bottom:0.4rem;">🗓️ Patient Appointments</div>
+        <div style="color:var(--gray);font-size:0.9rem;margin-bottom:1.5rem;">Review and submit diagnoses for your patients</div>
 
-<div class="card">
-    <table>
-        <thead>
-            <tr>
-                <th>Appointment ID</th>
-                <th>Patient Email</th>
-                <th>Date</th>
-                <th>Time</th>
-                <th>Status</th>
-                <th>Diagnosis</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for appointment in appointments %}
-            <tr>
-                <td>{{ appointment.appointment_id }}</td>
-                <td>{{ appointment.patient_email }}</td>
-                <td>{{ appointment.date }}</td>
-                <td>{{ appointment.time }}</td>
-                <td>{{ appointment.status }}</td>
-                <td>
-                    {% if appointment.diagnosis %}
-                        {{ appointment.diagnosis }}
-                    {% else %}
-                        Not Updated
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-icon si-b">📅</div>
+                <div>
+                    <div class="stat-val">{{ appointments|selectattr('status','equalto','Scheduled')|list|length }}</div>
+                    <div class="stat-key">Scheduled</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon si-t">✅</div>
+                <div>
+                    <div class="stat-val">{{ appointments|selectattr('status','equalto','Completed')|list|length }}</div>
+                    <div class="stat-key">Completed</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon si-p">👥</div>
+                <div>
+                    <div class="stat-val">{{ appointments|length }}</div>
+                    <div class="stat-key">Total Patients</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon si-o">🔍</div>
+                <div>
+                    <div class="stat-val">Search</div>
+                    <div class="stat-key"><a href="/search" style="color:var(--teal);text-decoration:none;font-weight:600;">By Date →</a></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <div class="section-label">👥 Patient List</div>
+
+            {% if appointments %}
+                {% for apt in appointments %}
+                <div class="apt-card">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.8rem;flex-wrap:wrap;gap:0.5rem;">
+                        <div style="display:flex;align-items:center;gap:0.75rem;">
+                            <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">😷</div>
+                            <div>
+                                <div style="font-weight:800;font-size:0.95rem;color:var(--charcoal);">{{ apt.patient_email }}</div>
+                                <div style="font-size:0.75rem;color:#94a3b8;font-family:monospace;">{{ apt.appointment_id[:16] }}...</div>
+                            </div>
+                        </div>
+                        <span class="badge {% if apt.status == 'Scheduled' %}badge-scheduled{% else %}badge-completed{% endif %}">
+                            {% if apt.status == 'Scheduled' %}📅{% else %}✅{% endif %} {{ apt.status }}
+                        </span>
+                    </div>
+
+                    <div class="apt-meta">
+                        <div class="apt-detail"><span class="lbl">📅 Date:</span><span class="val">{{ apt.date }}</span></div>
+                        <div class="apt-detail"><span class="lbl">🕐 Time:</span><span class="val">{{ apt.time }}</span></div>
+                        {% if apt.get('reason') %}
+                        <div class="apt-detail"><span class="lbl">📝 Reason:</span><span class="val">{{ apt.reason }}</span></div>
+                        {% endif %}
+                    </div>
+
+                    {% if apt.get('diagnosis') %}
+                    <div style="background:#f0fdf4;border-radius:10px;padding:0.8rem 1rem;margin-top:0.5rem;border-left:3px solid #10b981;font-size:0.85rem;">
+                        <strong style="color:#065f46;">✅ Diagnosis:</strong> {{ apt.diagnosis }}
+                    </div>
                     {% endif %}
-                </td>
-                <td>
-                    {% if not appointment.diagnosis %}
-                        <a href="/submit_diagnosis?appointment_id={{ appointment.appointment_id }}" class="btn">
-                            Add Diagnosis
-                        </a>
-                    {% else %}
-                        ✔ Completed
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+
+                    <div style="margin-top:0.8rem;">
+                        {% if apt.status == 'Scheduled' %}
+                        <button class="btn btn-teal btn-sm" onclick="openModal('{{ apt.appointment_id }}')">🔬 Add Diagnosis</button>
+                        {% else %}
+                        <span style="background:#d1fae5;color:#059669;padding:0.35rem 1rem;border-radius:25px;font-size:0.8rem;font-weight:700;">✅ Diagnosis Submitted</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+            <div class="empty-state">
+                <div class="ei">🗓️</div>
+                <p>No appointments yet. Patients will appear here when they book using your email.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
 </div>
 
-{% else %}
-
-<div class="card">
-    <p>No appointments assigned to you.</p>
+<!-- DIAGNOSIS MODAL -->
+<div class="modal-overlay" id="diagModal">
+    <div class="modal-box">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;">
+            <h4 style="font-size:1.2rem;font-weight:900;">🔬 Submit Diagnosis</h4>
+            <button onclick="closeModal()" style="width:30px;height:30px;border-radius:50%;background:#f1f5f9;border:none;cursor:pointer;font-size:1rem;">✕</button>
+        </div>
+        <form method="POST" action="/submit_diagnosis">
+            <input type="hidden" name="appointment_id" id="modalAptId">
+            <div class="form-group">
+                <label>Diagnosis / Condition</label>
+                <input type="text" name="diagnosis" placeholder="e.g. Hypertension, Migraine, Type 2 Diabetes..." required>
+            </div>
+            <div style="display:flex;gap:0.75rem;margin-top:1rem;">
+                <button type="button" onclick="closeModal()" class="btn btn-outline" style="flex:1;padding:0.7rem;">Cancel</button>
+                <button type="submit" class="btn btn-teal" style="flex:2;padding:0.7rem;border-radius:50px;">✅ Submit</button>
+            </div>
+        </form>
+    </div>
 </div>
 
-{% endif %}
-
-<div style="margin-top:20px;">
-    <a href="/doctor_dashboard" class="btn">Back to Dashboard</a>
-</div>
+<script>
+    function openModal(aptId) {
+        document.getElementById('modalAptId').value = aptId;
+        document.getElementById('diagModal').classList.add('show');
+    }
+    function closeModal() {
+        document.getElementById('diagModal').classList.remove('show');
+    }
+    document.getElementById('diagModal').addEventListener('click', function(e) {
+        if(e.target === this) closeModal();
+    });
+</script>
 
 {% endblock %}
