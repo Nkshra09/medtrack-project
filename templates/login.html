@@ -1,154 +1,81 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login — MedTrack</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <style>
-    body {
-      min-height: 100vh;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      display: flex;
-      flex-direction: column;
-    }
-    .login-wrap {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem;
-    }
-    .login-card {
-      background: white;
-      border-radius: 24px;
-      padding: 2.5rem;
-      width: 100%;
-      max-width: 440px;
-      box-shadow: 0 30px 80px rgba(0,0,0,0.25);
-    }
-    .login-header { text-align: center; margin-bottom: 2rem; }
-    .login-header .icon { font-size: 3rem; margin-bottom: 0.5rem; }
-    .login-header h2 { font-size: 1.8rem; font-weight: 900; color: var(--dark); }
-    .login-header p { color: var(--gray); font-size: 0.9rem; margin-top: 0.3rem; }
+{% extends "base.html" %}
+{% block content %}
 
-    .role-toggle {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.5rem;
-      margin-bottom: 1.8rem;
-      background: #F3F4F6;
-      padding: 0.4rem;
-      border-radius: 14px;
-    }
-    .role-toggle label {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.4rem;
-      padding: 0.65rem;
-      border-radius: 10px;
-      cursor: pointer;
-      font-weight: 700;
-      font-size: 0.9rem;
-      color: var(--gray);
-      transition: all 0.2s;
-    }
-    .role-toggle input[type="radio"] { display: none; }
-    .role-toggle input[type="radio"]:checked + label {
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      color: white;
-      box-shadow: 0 4px 15px rgba(102,126,234,0.4);
-    }
+<div class="auth-bg" style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);">
+    <div style="background:white;border-radius:24px;padding:2.5rem;width:100%;max-width:440px;box-shadow:0 30px 80px rgba(0,0,0,0.25);">
 
-    .login-footer { text-align: center; margin-top: 1.5rem; }
-    .login-footer a { color: var(--purple); font-weight: 700; text-decoration: none; }
-    .login-footer a:hover { text-decoration: underline; }
+        <!-- Header -->
+        <div style="text-align:center;margin-bottom:2rem;">
+            <div style="font-size:3rem;margin-bottom:0.5rem;">🔑</div>
+            <h2 style="font-size:1.8rem;font-weight:900;color:var(--dark);">Welcome Back!</h2>
+            <p style="color:var(--gray);font-size:0.9rem;margin-top:0.3rem;">Login to your MedTrack account</p>
+        </div>
 
-    .doctor-hint {
-      background: linear-gradient(135deg, #EDE9FE, #F3E8FF);
-      border-radius: 12px;
-      padding: 1rem;
-      margin-bottom: 1.5rem;
-      font-size: 0.82rem;
-      color: #6D28D9;
-      border-left: 3px solid var(--purple);
-    }
-    .doctor-hint strong { display: block; margin-bottom: 0.3rem; }
-  </style>
-</head>
-<body>
-<nav class="navbar">
-  <a href="/" class="logo"><span>🏥</span> MedTrack</a>
-  <div class="nav-links">
-    <a href="/register" class="btn-nav">Register</a>
-  </div>
-</nav>
+        {% if error %}
+        <div class="alert alert-error">⚠️ {{ error }}</div>
+        {% endif %}
 
-<div class="login-wrap">
-  <div class="login-card">
-    <div class="login-header">
-      <div class="icon">🔑</div>
-      <h2>Welcome Back!</h2>
-      <p>Login to your MedTrack account</p>
+        <!-- Role Toggle -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:1.8rem;background:#F3F4F6;padding:0.4rem;border-radius:14px;">
+            <input type="radio" name="role_display" id="role_patient" style="display:none;" checked>
+            <label for="role_patient" id="lbl_patient" style="display:flex;align-items:center;justify-content:center;gap:0.4rem;padding:0.65rem;border-radius:10px;cursor:pointer;font-weight:700;font-size:0.9rem;background:linear-gradient(135deg,#667eea,#764ba2);color:white;box-shadow:0 4px 15px rgba(102,126,234,0.4);transition:all 0.2s;">
+                👤 Patient
+            </label>
+            <input type="radio" name="role_display" id="role_doctor" style="display:none;">
+            <label for="role_doctor" id="lbl_doctor" style="display:flex;align-items:center;justify-content:center;gap:0.4rem;padding:0.65rem;border-radius:10px;cursor:pointer;font-weight:700;font-size:0.9rem;color:var(--gray);transition:all 0.2s;">
+                👨‍⚕️ Doctor
+            </label>
+        </div>
+
+        <!-- Doctor hint -->
+        <div id="doctorHint" style="display:none;background:linear-gradient(135deg,#EDE9FE,#F3E8FF);border-radius:12px;padding:1rem;margin-bottom:1.5rem;font-size:0.82rem;color:#6D28D9;border-left:3px solid #7c3aed;">
+            <strong style="display:block;margin-bottom:0.3rem;">🧪 Doctor Login</strong>
+            Register a new account with role "Doctor" to get started
+        </div>
+
+        <form method="POST" action="/login">
+            <div class="form-group">
+                <label>📧 Email Address</label>
+                <input type="email" name="email" placeholder="you@example.com" required>
+            </div>
+            <div class="form-group">
+                <label>🔒 Password</label>
+                <input type="password" name="password" placeholder="Your password" required>
+            </div>
+            <button type="submit" class="btn btn-primary" style="font-size:1rem;padding:0.9rem;border-radius:50px;">
+                Login →
+            </button>
+        </form>
+
+        <div class="form-link" style="margin-top:1.5rem;">
+            Don't have an account? <a href="/register">Register here</a>
+        </div>
     </div>
-
-    {% if error %}
-    <div class="alert alert-error">⚠️ {{ error }}</div>
-    {% endif %}
-
-    <!-- Role Toggle -->
-    <div class="role-toggle">
-      <input type="radio" name="role_display" id="role_patient" checked>
-      <label for="role_patient">👤 Patient</label>
-      <input type="radio" name="role_display" id="role_doctor">
-      <label for="role_doctor">👨‍⚕️ Doctor</label>
-    </div>
-
-    <!-- Doctor hint -->
-    <div class="doctor-hint" id="doctorHint" style="display:none;">
-      <strong>🧪 Demo Doctor Accounts:</strong>
-      sarah@medtrack.com / doctor123<br>
-      james@medtrack.com / doctor123
-    </div>
-
-    <form method="POST" action="/login">
-      <input type="hidden" name="role" id="roleInput" value="patient">
-
-      <div class="form-group">
-        <label>📧 Email Address</label>
-        <input type="email" name="email" placeholder="you@example.com" required>
-      </div>
-      <div class="form-group">
-        <label>🔒 Password</label>
-        <input type="password" name="password" placeholder="Your password" required>
-      </div>
-
-      <button type="submit" class="btn btn-primary" style="width:100%; font-size:1rem; padding:0.9rem;">
-        Login →
-      </button>
-    </form>
-
-    <div class="login-footer">
-      <p>Don't have an account? <a href="/register">Register here</a></p>
-    </div>
-  </div>
 </div>
 
 <script>
-  const patientRadio = document.getElementById('role_patient');
-  const doctorRadio  = document.getElementById('role_doctor');
-  const roleInput    = document.getElementById('roleInput');
-  const doctorHint   = document.getElementById('doctorHint');
+    const lblP = document.getElementById('lbl_patient');
+    const lblD = document.getElementById('lbl_doctor');
+    const hint = document.getElementById('doctorHint');
 
-  patientRadio.addEventListener('change', () => {
-    roleInput.value = 'patient';
-    doctorHint.style.display = 'none';
-  });
-  doctorRadio.addEventListener('change', () => {
-    roleInput.value = 'doctor';
-    doctorHint.style.display = 'block';
-  });
+    document.getElementById('role_doctor').addEventListener('change', () => {
+        lblD.style.background = 'linear-gradient(135deg,#667eea,#764ba2)';
+        lblD.style.color = 'white';
+        lblD.style.boxShadow = '0 4px 15px rgba(102,126,234,0.4)';
+        lblP.style.background = 'transparent';
+        lblP.style.color = 'var(--gray)';
+        lblP.style.boxShadow = 'none';
+        hint.style.display = 'block';
+    });
+    document.getElementById('role_patient').addEventListener('change', () => {
+        lblP.style.background = 'linear-gradient(135deg,#667eea,#764ba2)';
+        lblP.style.color = 'white';
+        lblP.style.boxShadow = '0 4px 15px rgba(102,126,234,0.4)';
+        lblD.style.background = 'transparent';
+        lblD.style.color = 'var(--gray)';
+        lblD.style.boxShadow = 'none';
+        hint.style.display = 'none';
+    });
 </script>
-</body>
-</html>
+
+{% endblock %}
