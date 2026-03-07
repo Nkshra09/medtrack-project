@@ -18,10 +18,10 @@ logging.basicConfig(
 # ----------------------------
 # AWS Configuration
 # ----------------------------
-REGION = "ap-south-1"
-SNS_TOPIC_ARN = "arn:aws:sns:us-east-1:145023131777:MedTrack"
+REGION        = "ap-south-1"
+SNS_TOPIC_ARN = "arn:aws:sns:ap-south-1:145023131777:MedTrack"
 
-dynamodb = boto3.resource('dynamodb', region_name=REGION)
+dynamodb           = boto3.resource('dynamodb', region_name=REGION)
 users_table        = dynamodb.Table('UsersTable')
 appointments_table = dynamodb.Table('AppointmentsTable')
 
@@ -46,6 +46,9 @@ def register():
                 "name":        request.form["name"],
                 "password":    request.form["password"],
                 "role":        request.form["role"],
+                "age":         request.form.get("age", ""),
+                "blood_type":  request.form.get("blood_type", ""),
+                "phone":       request.form.get("phone", ""),
                 "login_count": 0
             }
         )
@@ -66,10 +69,13 @@ def login():
         response = users_table.get_item(Key={"email": email})
 
         if "Item" in response and response["Item"]["password"] == password:
-            session["user"] = email
-            session["role"] = response["Item"]["role"]
-            session["name"] = response["Item"]["name"]
+            session["user"]       = email
+            session["role"]       = response["Item"]["role"]
+            session["name"]       = response["Item"]["name"]
+            session["blood_type"] = response["Item"].get("blood_type", "")
+            session["age"]        = response["Item"].get("age", "")
 
+            # Track login count
             users_table.update_item(
                 Key={"email": email},
                 UpdateExpression="SET login_count = login_count + :val",
@@ -99,17 +105,17 @@ def logout():
 # ----------------------------
 # Dashboards
 # ----------------------------
-@app.route("/doctor_dashboard")
-def doctor_dashboard():
-    if "user" not in session:
-        return redirect("/login")
-    return render_template("doctor_dashboard.html")
-
 @app.route("/patient_dashboard")
 def patient_dashboard():
     if "user" not in session:
         return redirect("/login")
     return render_template("patient_dashboard.html")
+
+@app.route("/doctor_dashboard")
+def doctor_dashboard():
+    if "user" not in session:
+        return redirect("/login")
+    return render_template("doctor_dashboard.html")
 
 # ----------------------------
 # Book Appointment
@@ -126,6 +132,7 @@ def book_appointment():
             Item={
                 "appointment_id": appointment_id,
                 "patient_email":  session["user"],
+                "patient_name":   session.get("name", ""),
                 "doctor_email":   request.form["doctor_email"],
                 "date":           request.form["date"],
                 "time":           request.form["time"],
@@ -138,34 +145,18 @@ def book_appointment():
         try:
             sns.publish(
                 TopicArn=SNS_TOPIC_ARN,
-                Message=f"New appointment booked by {session['user']} on {request.form['date']} at {request.form['time']}",
+                Message=f"New appointment booked by {session['user']} "
+                        f"on {request.form['date']} at {request.form['time']}",
                 Subject="New Appointment - MedTrack"
             )
             logging.info("SNS notification sent")
         except Exception as e:
-            logging.warning(f"SNS failed: {e}")
+            logging.warning(f"SNS notification failed: {e}")
 
         logging.info(f"Appointment booked by {session['user']}")
         return redirect("/view_appointment_patient")
 
     return render_template("book_appointment.html")
-
-# ----------------------------
-# View Doctor Appointments
-# ----------------------------
-@app.route("/view_appointment_doctor")
-def view_appointment_doctor():
-    if "user" not in session:
-        return redirect("/login")
-
-    doctor_email = session["user"]
-    response     = appointments_table.scan()
-    appointments = [
-        item for item in response.get("Items", [])
-        if item.get("doctor_email") == doctor_email
-    ]
-
-    return render_template("view_appointment_doctor.html", appointments=appointments)
 
 # ----------------------------
 # View Patient Appointments
@@ -175,14 +166,29 @@ def view_appointment_patient():
     if "user" not in session:
         return redirect("/login")
 
-    patient_email = session["user"]
-    response      = appointments_table.scan()
-    appointments  = [
+    response     = appointments_table.scan()
+    appointments = [
         item for item in response.get("Items", [])
-        if item.get("patient_email") == patient_email
+        if item.get("patient_email") == session["user"]
     ]
 
     return render_template("view_appointment_patient.html", appointments=appointments)
+
+# ----------------------------
+# View Doctor Appointments
+# ----------------------------
+@app.route("/view_appointment_doctor")
+def view_appointment_doctor():
+    if "user" not in session:
+        return redirect("/login")
+
+    response     = appointments_table.scan()
+    appointments = [
+        item for item in response.get("Items", [])
+        if item.get("doctor_email") == session["user"]
+    ]
+
+    return render_template("view_appointment_doctor.html", appointments=appointments)
 
 # ----------------------------
 # Submit Diagnosis
@@ -206,14 +212,14 @@ def submit_diagnosis():
             ExpressionAttributeNames={"#s": "status"}
         )
 
-        logging.info(f"Diagnosis submitted for appointment {appointment_id}")
+        logging.info(f"Diagnosis submitted for {appointment_id}")
         return redirect("/view_appointment_doctor")
 
     appointment_id = request.args.get("appointment_id")
     return render_template("submit_diagnosis.html", appointment_id=appointment_id)
 
 # ----------------------------
-# Search Appointment by Date
+# Search by Date
 # ----------------------------
 @app.route("/search", methods=["GET", "POST"])
 def search():
@@ -227,7 +233,9 @@ def search():
             item for item in response.get("Items", [])
             if item.get("date") == search_date
         ]
-        return render_template("search_results.html", appointments=results, search_date=search_date)
+        return render_template("search_results.html",
+                               appointments=results,
+                               search_date=search_date)
 
     return render_template("search_results.html", appointments=[], search_date="")
 
