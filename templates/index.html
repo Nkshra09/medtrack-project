@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
 
-<!-- HERO SECTION -->
-<div class="hero" style="margin:-2rem -1.5rem; padding:2rem;">
+<!-- HERO -->
+<div class="hero">
     <div class="hero-inner">
         <div class="hero-badge">
             <div class="hero-dot"></div>
@@ -23,33 +23,34 @@
         <span style="background:rgba(13,148,136,0.1);color:var(--teal-dark);padding:0.3rem 1rem;border-radius:50px;font-size:0.78rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">✦ Features</span>
     </div>
     <h2 style="text-align:center;font-size:clamp(1.8rem,3vw,2.4rem);font-weight:900;margin-top:0.5rem;">Everything You Need</h2>
+
     <div class="features-grid">
         <div class="feat-card reveal">
             <div class="feat-icon">📅</div>
             <h4>Smart Booking</h4>
-            <p>Book appointments with any doctor in seconds — pick your date and time slot instantly.</p>
+            <p>Book appointments with any doctor in seconds — pick your date and time instantly.</p>
         </div>
         <div class="feat-card reveal">
             <div class="feat-icon">🔬</div>
             <h4>Digital Diagnosis</h4>
-            <p>Doctors submit detailed diagnoses and prescriptions stored permanently in the cloud.</p>
+            <p>Doctors submit detailed diagnoses stored permanently in AWS DynamoDB cloud.</p>
         </div>
         <div class="feat-card reveal">
             <div class="feat-icon">📋</div>
             <h4>Medical History</h4>
-            <p>All your appointments and diagnoses are securely stored and accessible anytime.</p>
+            <p>All your appointments and diagnoses securely stored and accessible anytime.</p>
         </div>
         <div class="feat-card reveal">
             <div class="feat-icon">🔔</div>
             <h4>SNS Notifications</h4>
-            <p>Get instant AWS SNS notifications when appointments are booked or updated.</p>
+            <p>Get instant AWS SNS email notifications when appointments are booked.</p>
         </div>
     </div>
 </div>
 
 <script>
     const obs = new IntersectionObserver(entries => {
-        entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('visible'); obs.unobserve(e.target); } });
+        entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('visible'); obs.unobserve(e.target); }});
     }, {threshold:0.15});
     document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 </script>
