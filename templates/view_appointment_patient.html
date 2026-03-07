@@ -1,54 +1,82 @@
 {% extends "base.html" %}
-
 {% block content %}
 
-<h2>🧑‍⚕️ My Appointments</h2>
+<div class="dashboard-page">
+    <div style="max-width:1060px;margin:0 auto;">
 
-{% if appointments and appointments|length > 0 %}
+        <div style="font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:900;margin-bottom:0.4rem;">📋 My Appointments</div>
+        <div style="color:var(--gray);font-size:0.9rem;margin-bottom:1.5rem;">All your booked appointments and diagnoses</div>
 
-<div class="card">
-    <table>
-        <thead>
-            <tr>
-                <th>Appointment ID</th>
-                <th>Doctor Email</th>
-                <th>Date</th>
-                <th>Time</th>
-                <th>Status</th>
-                <th>Diagnosis</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for appointment in appointments %}
-            <tr>
-                <td>{{ appointment.appointment_id }}</td>
-                <td>{{ appointment.doctor_email }}</td>
-                <td>{{ appointment.date }}</td>
-                <td>{{ appointment.time }}</td>
-                <td>{{ appointment.status }}</td>
-                <td>
-                    {% if appointment.diagnosis %}
-                        {{ appointment.diagnosis }}
-                    {% else %}
-                        Not Yet Updated
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-icon si-b">📅</div>
+                <div>
+                    <div class="stat-val">{{ appointments|selectattr('status','equalto','Scheduled')|list|length }}</div>
+                    <div class="stat-key">Scheduled</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon si-t">✅</div>
+                <div>
+                    <div class="stat-val">{{ appointments|selectattr('status','equalto','Completed')|list|length }}</div>
+                    <div class="stat-key">Completed</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon si-p">📊</div>
+                <div>
+                    <div class="stat-val">{{ appointments|length }}</div>
+                    <div class="stat-key">Total</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon si-o">➕</div>
+                <div>
+                    <div class="stat-val">Book</div>
+                    <div class="stat-key"><a href="/book_appointment" style="color:var(--teal);text-decoration:none;font-weight:600;">New Appointment →</a></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <div class="section-label">🗓️ Appointment History</div>
+
+            {% if appointments %}
+                {% for apt in appointments %}
+                <div class="apt-card">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.8rem;flex-wrap:wrap;gap:0.5rem;">
+                        <div style="font-weight:800;font-size:1rem;color:var(--charcoal);">
+                            👨‍⚕️ {{ apt.doctor_email }}
+                        </div>
+                        <span class="badge {% if apt.status == 'Scheduled' %}badge-scheduled{% elif apt.status == 'Completed' %}badge-completed{% else %}badge-cancelled{% endif %}">
+                            {% if apt.status == 'Scheduled' %}📅{% elif apt.status == 'Completed' %}✅{% else %}❌{% endif %}
+                            {{ apt.status }}
+                        </span>
+                    </div>
+                    <div class="apt-meta">
+                        <div class="apt-detail"><span class="lbl">📅 Date:</span><span class="val">{{ apt.date }}</span></div>
+                        <div class="apt-detail"><span class="lbl">🕐 Time:</span><span class="val">{{ apt.time }}</span></div>
+                        {% if apt.get('reason') %}
+                        <div class="apt-detail"><span class="lbl">📝 Reason:</span><span class="val">{{ apt.reason }}</span></div>
+                        {% endif %}
+                    </div>
+                    {% if apt.get('diagnosis') %}
+                    <div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-radius:10px;padding:1rem;margin-top:0.5rem;border-left:3px solid #10b981;">
+                        <div style="font-size:0.75rem;font-weight:700;color:#065f46;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.3rem;">🔬 Diagnosis</div>
+                        <div style="font-weight:700;color:#1e293b;">{{ apt.diagnosis }}</div>
+                    </div>
                     {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-
-{% else %}
-
-<div class="card">
-    <p>You have no appointments booked.</p>
-</div>
-
-{% endif %}
-
-<div style="margin-top:20px;">
-    <a href="/patient_dashboard" class="btn">Back to Dashboard</a>
+                </div>
+                {% endfor %}
+            {% else %}
+            <div class="empty-state">
+                <div class="ei">📅</div>
+                <p>No appointments yet.</p>
+                <a href="/book_appointment" class="btn btn-teal btn-sm">Book Your First Appointment</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
 </div>
 
 {% endblock %}
