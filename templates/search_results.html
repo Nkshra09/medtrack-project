@@ -1,56 +1,63 @@
 {% extends "base.html" %}
-
 {% block content %}
 
-<h2>🔍 Search Results</h2>
+<div class="dashboard-page">
+    <div style="max-width:800px;margin:0 auto;">
 
-{% if appointments and appointments|length > 0 %}
+        <div style="font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:900;margin-bottom:0.4rem;">🔍 Search Appointments</div>
+        <div style="color:var(--gray);font-size:0.9rem;margin-bottom:1.5rem;">Find appointments by date</div>
 
-    <div class="card">
-        <table>
-            <thead>
-                <tr>
-                    <th>Appointment ID</th>
-                    <th>Patient Email</th>
-                    <th>Doctor Email</th>
-                    <th>Date</th>
-                    <th>Time</th>
-                    <th>Status</th>
-                    <th>Diagnosis</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for appointment in appointments %}
-                <tr>
-                    <td>{{ appointment.appointment_id }}</td>
-                    <td>{{ appointment.patient_email }}</td>
-                    <td>{{ appointment.doctor_email }}</td>
-                    <td>{{ appointment.date }}</td>
-                    <td>{{ appointment.time }}</td>
-                    <td>{{ appointment.status }}</td>
-                    <td>
-                        {% if appointment.diagnosis %}
-                            {{ appointment.diagnosis }}
-                        {% else %}
-                            Not Updated
+        <div class="section-card" style="margin-bottom:1.5rem;">
+            <div class="section-label">📅 Search by Date</div>
+            <form method="POST" action="/search">
+                <div style="display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap;">
+                    <div class="form-group" style="flex:1;min-width:200px;margin-bottom:0;">
+                        <label>Select Date</label>
+                        <input type="date" name="date" value="{{ search_date }}" required>
+                    </div>
+                    <button type="submit" class="btn btn-teal" style="padding:0.75rem 2rem;border-radius:50px;">🔍 Search</button>
+                </div>
+            </form>
+        </div>
+
+        {% if search_date %}
+        <div class="section-card">
+            <div class="section-label">
+                📋 Results for {{ search_date }}
+                <span style="font-size:0.8rem;font-weight:500;color:#94a3b8;">— {{ appointments|length }} found</span>
+            </div>
+
+            {% if appointments %}
+                {% for apt in appointments %}
+                <div class="apt-card">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.7rem;flex-wrap:wrap;gap:0.5rem;">
+                        <div style="font-weight:800;color:var(--charcoal);">👤 {{ apt.patient_email }}</div>
+                        <span class="badge {% if apt.status == 'Scheduled' %}badge-scheduled{% else %}badge-completed{% endif %}">{{ apt.status }}</span>
+                    </div>
+                    <div class="apt-meta">
+                        <div class="apt-detail"><span class="lbl">👨‍⚕️ Doctor:</span><span class="val">{{ apt.doctor_email }}</span></div>
+                        <div class="apt-detail"><span class="lbl">🕐 Time:</span><span class="val">{{ apt.time }}</span></div>
+                        {% if apt.get('reason') %}
+                        <div class="apt-detail"><span class="lbl">📝 Reason:</span><span class="val">{{ apt.reason }}</span></div>
                         {% endif %}
-                    </td>
-                </tr>
+                    </div>
+                    {% if apt.get('diagnosis') %}
+                    <div style="background:#f0fdf4;border-radius:8px;padding:0.7rem 1rem;margin-top:0.5rem;font-size:0.85rem;border-left:3px solid #10b981;">
+                        <strong style="color:#065f46;">Diagnosis:</strong> {{ apt.diagnosis }}
+                    </div>
+                    {% endif %}
+                </div>
                 {% endfor %}
-            </tbody>
-        </table>
+            {% else %}
+            <div class="empty-state">
+                <div class="ei">🔍</div>
+                <p>No appointments found for <strong>{{ search_date }}</strong></p>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
     </div>
-
-{% else %}
-
-    <div class="card">
-        <p>No appointments found for selected date.</p>
-    </div>
-
-{% endif %}
-
-<div style="margin-top:20px;">
-    <a href="/" class="btn">Back to Home</a>
 </div>
 
 {% endblock %}
