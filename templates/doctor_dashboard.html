@@ -1,35 +1,81 @@
 {% extends "base.html" %}
-
 {% block content %}
 
-<h2>👨‍⚕️ Doctor Dashboard</h2>
+<div class="dashboard-page" style="background-color:#f0fdf6;">
+    <div style="max-width:1060px;margin:0 auto;">
 
-<div class="dashboard-grid">
+        <!-- WELCOME BANNER -->
+        <div class="welcome-banner wb-doctor">
+            <div class="wb-text">
+                <h2>Good Day, Dr. {{ session.get('name', session.get('user')) }}! 🩺</h2>
+                <p>Manage patient appointments and submit diagnoses</p>
+            </div>
+            <div class="wb-actions">
+                <a href="/view_appointment_doctor" class="wb-btn-solid">🗓️ View Appointments</a>
+                <a href="/search" class="wb-btn">🔍 Search by Date</a>
+            </div>
+        </div>
 
-    <!-- View Appointments -->
-    <div class="dashboard-box">
-        <h3>📅 View Appointments</h3>
-        <p>Check all scheduled patient appointments.</p>
-        <a href="/view_appointments" class="btn">View</a>
+        <!-- STATS -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-icon si-t">🗓️</div>
+                <div>
+                    <div class="stat-val">View</div>
+                    <div class="stat-key"><a href="/view_appointment_doctor" style="color:var(--teal);text-decoration:none;font-weight:600;">Appointments →</a></div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon si-b">🔬</div>
+                <div>
+                    <div class="stat-val">Submit</div>
+                    <div class="stat-key"><a href="/view_appointment_doctor" style="color:var(--teal);text-decoration:none;font-weight:600;">Diagnosis →</a></div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon si-p">🔍</div>
+                <div>
+                    <div class="stat-val">Search</div>
+                    <div class="stat-key"><a href="/search" style="color:var(--teal);text-decoration:none;font-weight:600;">By Date →</a></div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon si-o">👨‍⚕️</div>
+                <div>
+                    <div class="stat-val" style="font-size:0.95rem;">Doctor</div>
+                    <div class="stat-key">{{ session.get('user') }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DOCTOR WORKFLOW -->
+        <div class="section-card">
+            <div class="section-label">🩺 Doctor Workflow</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;">
+                <div style="text-align:center;padding:1.2rem;background:#f0fdf4;border-radius:12px;border:1px solid #d1fae5;">
+                    <div style="font-size:2rem;margin-bottom:0.5rem;">📥</div>
+                    <div style="font-weight:700;font-size:0.9rem;color:#065f46;margin-bottom:0.3rem;">Receive Appointments</div>
+                    <div style="font-size:0.8rem;color:#64748b;">Patients book using your email</div>
+                </div>
+                <div style="text-align:center;padding:1.2rem;background:#eff6ff;border-radius:12px;border:1px solid #dbeafe;">
+                    <div style="font-size:2rem;margin-bottom:0.5rem;">👁️</div>
+                    <div style="font-weight:700;font-size:0.9rem;color:#1e40af;margin-bottom:0.3rem;">Review Patients</div>
+                    <div style="font-size:0.8rem;color:#64748b;">View all scheduled appointments</div>
+                </div>
+                <div style="text-align:center;padding:1.2rem;background:#fdf4ff;border-radius:12px;border:1px solid #e9d5ff;">
+                    <div style="font-size:2rem;margin-bottom:0.5rem;">🔬</div>
+                    <div style="font-weight:700;font-size:0.9rem;color:#6b21a8;margin-bottom:0.3rem;">Submit Diagnosis</div>
+                    <div style="font-size:0.8rem;color:#64748b;">Mark appointment completed</div>
+                </div>
+                <div style="text-align:center;padding:1.2rem;background:#fff7ed;border-radius:12px;border:1px solid #fed7aa;">
+                    <div style="font-size:2rem;margin-bottom:0.5rem;">☁️</div>
+                    <div style="font-weight:700;font-size:0.9rem;color:#9a3412;margin-bottom:0.3rem;">Cloud Stored</div>
+                    <div style="font-size:0.8rem;color:#64748b;">All data saved in AWS DynamoDB</div>
+                </div>
+            </div>
+        </div>
+
     </div>
-
-    <!-- Submit Diagnosis -->
-    <div class="dashboard-box">
-        <h3>📝 Submit Diagnosis</h3>
-        <p>Update diagnosis for completed appointments.</p>
-        <a href="/submit_diagnosis" class="btn">Submit</a>
-    </div>
-
-    <!-- Search Appointment -->
-    <div class="dashboard-box">
-        <h3>🔍 Search Appointment</h3>
-        <p>Search appointments by date.</p>
-        <form action="/search" method="POST">
-            <input type="date" name="date" required>
-            <button type="submit" class="btn">Search</button>
-        </form>
-    </div>
-
 </div>
 
 {% endblock %}
