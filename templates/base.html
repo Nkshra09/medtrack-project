@@ -2,35 +2,36 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>MedTrack - Healthcare Management System</title>
-
-    <!-- Responsive Meta -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- CSS Link -->
+    <title>MedTrack - Healthcare Management System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-
 <body>
 
     <!-- ================= Navbar ================= -->
     <div class="navbar">
-        <h1>🩺 MedTrack</h1>
-
-        <div>
+        <a href="/" class="nav-brand">
+            <div class="nav-cross">+</div>
+            <span>MedTrack</span>
+        </a>
+        <div class="nav-links">
             {% if session.get('user') %}
                 <a href="/">Home</a>
-                
                 {% if session.get('role') == 'doctor' %}
                     <a href="/doctor_dashboard">Dashboard</a>
+                    <a href="/view_appointment_doctor">Appointments</a>
                 {% else %}
                     <a href="/patient_dashboard">Dashboard</a>
+                    <a href="/view_appointment_patient">My Appointments</a>
+                    <a href="/book_appointment">Book</a>
                 {% endif %}
-                
-                <a href="/logout">Logout</a>
+                <span class="nav-user">👤 {{ session.get('name', session.get('user')) }}</span>
+                <a href="/logout" class="nav-btn-outline">Logout</a>
             {% else %}
                 <a href="/login">Login</a>
-                <a href="/register">Register</a>
+                <a href="/register" class="nav-btn">Get Started</a>
             {% endif %}
         </div>
     </div>
@@ -43,7 +44,7 @@
 
     <!-- ================= Footer ================= -->
     <div class="footer">
-        <p>© 2026 MedTrack | Cloud Enabled Healthcare Management System</p>
+        <p>© 2026 MedTrack &nbsp;|&nbsp; Cloud-Enabled Healthcare Management System</p>
     </div>
 
 </body>
