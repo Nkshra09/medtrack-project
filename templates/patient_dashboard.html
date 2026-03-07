@@ -1,36 +1,105 @@
 {% extends "base.html" %}
-
 {% block content %}
 
-<h2>🧑‍⚕️ Patient Dashboard</h2>
+<div class="dashboard-page">
+    <div style="max-width:1060px;margin:0 auto;">
 
-<div class="dashboard-grid">
+        <!-- WELCOME BANNER -->
+        <div class="welcome-banner wb-patient">
+            <div class="wb-text">
+                <h2>Hello, {{ session.get('name', 'Patient') }}! 🌟</h2>
+                <p>Welcome to your patient dashboard — manage your health easily</p>
+            </div>
+            <div class="wb-actions">
+                <a href="/book_appointment" class="wb-btn-solid">📅 Book Appointment</a>
+                <a href="/view_appointment_patient" class="wb-btn">📋 My Appointments</a>
+                <a href="/search" class="wb-btn">🔍 Search</a>
+            </div>
+        </div>
 
-    <!-- Book Appointment -->
-    <div class="dashboard-box">
-        <h3>📅 Book Appointment</h3>
-        <p>Schedule a new appointment with a doctor.</p>
-        <a href="/book_appointment" class="btn">Book Now</a>
+        <!-- STATS ROW -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-icon si-t">📅</div>
+                <div>
+                    <div class="stat-val">Book</div>
+                    <div class="stat-key"><a href="/book_appointment" style="color:var(--teal);text-decoration:none;font-weight:600;">New Appointment →</a></div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon si-b">📋</div>
+                <div>
+                    <div class="stat-val">View</div>
+                    <div class="stat-key"><a href="/view_appointment_patient" style="color:var(--teal);text-decoration:none;font-weight:600;">My Appointments →</a></div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon si-r">🩸</div>
+                <div>
+                    <div class="stat-val">{{ session.get('blood_type', '—') }}</div>
+                    <div class="stat-key">Blood Type</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon si-o">🎂</div>
+                <div>
+                    <div class="stat-val">{{ session.get('age', '—') }}</div>
+                    <div class="stat-key">Age (years)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- HOW TO USE -->
+        <div class="section-card">
+            <div class="section-label">🏥 How to Use MedTrack</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;">
+                <div style="text-align:center;padding:1.2rem;background:#f0fdf4;border-radius:12px;border:1px solid #d1fae5;">
+                    <div style="font-size:2rem;margin-bottom:0.5rem;">1️⃣</div>
+                    <div style="font-weight:700;font-size:0.9rem;color:#065f46;margin-bottom:0.3rem;">Book Appointment</div>
+                    <div style="font-size:0.8rem;color:#64748b;">Enter doctor's email, date & time</div>
+                </div>
+                <div style="text-align:center;padding:1.2rem;background:#eff6ff;border-radius:12px;border:1px solid #dbeafe;">
+                    <div style="font-size:2rem;margin-bottom:0.5rem;">2️⃣</div>
+                    <div style="font-weight:700;font-size:0.9rem;color:#1e40af;margin-bottom:0.3rem;">Get Notified</div>
+                    <div style="font-size:0.8rem;color:#64748b;">AWS SNS sends you a notification</div>
+                </div>
+                <div style="text-align:center;padding:1.2rem;background:#fdf4ff;border-radius:12px;border:1px solid #e9d5ff;">
+                    <div style="font-size:2rem;margin-bottom:0.5rem;">3️⃣</div>
+                    <div style="font-weight:700;font-size:0.9rem;color:#6b21a8;margin-bottom:0.3rem;">Attend Visit</div>
+                    <div style="font-size:0.8rem;color:#64748b;">Meet your doctor on the scheduled date</div>
+                </div>
+                <div style="text-align:center;padding:1.2rem;background:#fff7ed;border-radius:12px;border:1px solid #fed7aa;">
+                    <div style="font-size:2rem;margin-bottom:0.5rem;">4️⃣</div>
+                    <div style="font-weight:700;font-size:0.9rem;color:#9a3412;margin-bottom:0.3rem;">View Diagnosis</div>
+                    <div style="font-size:0.8rem;color:#64748b;">Doctor uploads diagnosis to DynamoDB</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PROFILE CARD -->
+        <div class="section-card">
+            <div class="section-label">👤 My Profile</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;">
+                <div style="padding:1rem;background:#f8fafc;border-radius:10px;border:1px solid var(--border);">
+                    <div style="font-size:0.75rem;color:var(--gray);font-weight:700;text-transform:uppercase;margin-bottom:0.3rem;">Full Name</div>
+                    <div style="font-weight:700;color:var(--dark);">{{ session.get('name', '—') }}</div>
+                </div>
+                <div style="padding:1rem;background:#f8fafc;border-radius:10px;border:1px solid var(--border);">
+                    <div style="font-size:0.75rem;color:var(--gray);font-weight:700;text-transform:uppercase;margin-bottom:0.3rem;">Email</div>
+                    <div style="font-weight:700;color:var(--dark);">{{ session.get('user', '—') }}</div>
+                </div>
+                <div style="padding:1rem;background:#fef2f2;border-radius:10px;border:1px solid #fecaca;">
+                    <div style="font-size:0.75rem;color:#dc2626;font-weight:700;text-transform:uppercase;margin-bottom:0.3rem;">🩸 Blood Type</div>
+                    <div style="font-weight:900;color:#dc2626;font-size:1.2rem;">{{ session.get('blood_type', '—') }}</div>
+                </div>
+                <div style="padding:1rem;background:#f0fdf4;border-radius:10px;border:1px solid #d1fae5;">
+                    <div style="font-size:0.75rem;color:#059669;font-weight:700;text-transform:uppercase;margin-bottom:0.3rem;">Role</div>
+                    <div style="font-weight:700;color:#059669;">Patient 👤</div>
+                </div>
+            </div>
+        </div>
+
     </div>
-
-    <!-- View Appointments -->
-    <div class="dashboard-box">
-        <h3>📋 View Appointments</h3>
-        <p>Check your upcoming and past appointments.</p>
-        <a href="/view_appointments" class="btn">View</a>
-    </div>
-
-    <!-- Search Appointment -->
-    <div class="dashboard-box">
-        <h3>🔍 Search Appointment</h3>
-        <p>Search your appointments by date.</p>
-
-        <form action="/search" method="POST">
-            <input type="date" name="date" required>
-            <button type="submit" class="btn">Search</button>
-        </form>
-    </div>
-
 </div>
 
 {% endblock %}
