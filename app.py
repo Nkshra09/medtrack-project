@@ -18,11 +18,11 @@ logging.basicConfig(
 # ----------------------------
 # AWS Configuration
 # ----------------------------
-REGION = "ap-south-1"  # Change if needed
-SNS_TOPIC_ARN = "arn:aws:sns:ap-south-1:339713112656:Medtrack"
+REGION = "ap-south-1"
+SNS_TOPIC_ARN = "arn:aws:sns:us-east-1:145023131777:MedTrack"
 
 dynamodb = boto3.resource('dynamodb', region_name=REGION)
-users_table = dynamodb.Table('UsersTable')
+users_table        = dynamodb.Table('UsersTable')
 appointments_table = dynamodb.Table('AppointmentsTable')
 
 sns = boto3.client('sns', region_name=REGION)
@@ -42,14 +42,14 @@ def register():
     if request.method == "POST":
         users_table.put_item(
             Item={
-                "email": request.form["email"],
-                "name": request.form["name"],
-                "password": request.form["password"],
-                "role": request.form["role"],
+                "email":       request.form["email"],
+                "name":        request.form["name"],
+                "password":    request.form["password"],
+                "role":        request.form["role"],
                 "login_count": 0
             }
         )
-        logging.info("New user registered")
+        logging.info(f"New user registered: {request.form['email']}")
         return redirect("/login")
 
     return render_template("register.html")
@@ -60,7 +60,7 @@ def register():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        email = request.form["email"]
+        email    = request.form["email"]
         password = request.form["password"]
 
         response = users_table.get_item(Key={"email": email})
@@ -68,6 +68,7 @@ def login():
         if "Item" in response and response["Item"]["password"] == password:
             session["user"] = email
             session["role"] = response["Item"]["role"]
+            session["name"] = response["Item"]["name"]
 
             users_table.update_item(
                 Key={"email": email},
@@ -82,7 +83,7 @@ def login():
             else:
                 return redirect("/patient_dashboard")
 
-        return "Invalid Credentials"
+        return render_template("login.html", error="Invalid email or password")
 
     return render_template("login.html")
 
@@ -91,6 +92,7 @@ def login():
 # ----------------------------
 @app.route("/logout")
 def logout():
+    logging.info(f"{session.get('user')} logged out")
     session.clear()
     return redirect("/login")
 
@@ -123,22 +125,27 @@ def book_appointment():
         appointments_table.put_item(
             Item={
                 "appointment_id": appointment_id,
-                "patient_email": session["user"],
-                "doctor_email": request.form["doctor_email"],
-                "date": request.form["date"],
-                "time": request.form["time"],
-                "status": "Scheduled"
+                "patient_email":  session["user"],
+                "doctor_email":   request.form["doctor_email"],
+                "date":           request.form["date"],
+                "time":           request.form["time"],
+                "reason":         request.form.get("reason", ""),
+                "status":         "Scheduled"
             }
         )
 
-        sns.publish(
-            TopicArn=SNS_TOPIC_ARN,
-            Message=f"New appointment booked on {request.form['date']} at {request.form['time']}",
-            Subject="New Appointment"
-        )
+        # SNS Notification
+        try:
+            sns.publish(
+                TopicArn=SNS_TOPIC_ARN,
+                Message=f"New appointment booked by {session['user']} on {request.form['date']} at {request.form['time']}",
+                Subject="New Appointment - MedTrack"
+            )
+            logging.info("SNS notification sent")
+        except Exception as e:
+            logging.warning(f"SNS failed: {e}")
 
-        logging.info("Appointment booked")
-
+        logging.info(f"Appointment booked by {session['user']}")
         return redirect("/view_appointment_patient")
 
     return render_template("book_appointment.html")
@@ -152,8 +159,7 @@ def view_appointment_doctor():
         return redirect("/login")
 
     doctor_email = session["user"]
-
-    response = appointments_table.scan()
+    response     = appointments_table.scan()
     appointments = [
         item for item in response.get("Items", [])
         if item.get("doctor_email") == doctor_email
@@ -170,9 +176,8 @@ def view_appointment_patient():
         return redirect("/login")
 
     patient_email = session["user"]
-
-    response = appointments_table.scan()
-    appointments = [
+    response      = appointments_table.scan()
+    appointments  = [
         item for item in response.get("Items", [])
         if item.get("patient_email") == patient_email
     ]
@@ -189,41 +194,42 @@ def submit_diagnosis():
 
     if request.method == "POST":
         appointment_id = request.form["appointment_id"]
-        diagnosis = request.form["diagnosis"]
+        diagnosis      = request.form["diagnosis"]
 
         appointments_table.update_item(
             Key={"appointment_id": appointment_id},
             UpdateExpression="SET diagnosis = :d, #s = :status",
             ExpressionAttributeValues={
-                ":d": diagnosis,
+                ":d":      diagnosis,
                 ":status": "Completed"
             },
-            ExpressionAttributeNames={
-                "#s": "status"
-            }
+            ExpressionAttributeNames={"#s": "status"}
         )
 
-        logging.info("Diagnosis submitted")
-
+        logging.info(f"Diagnosis submitted for appointment {appointment_id}")
         return redirect("/view_appointment_doctor")
 
     appointment_id = request.args.get("appointment_id")
     return render_template("submit_diagnosis.html", appointment_id=appointment_id)
 
 # ----------------------------
-# Search Appointment
+# Search Appointment by Date
 # ----------------------------
-@app.route("/search", methods=["POST"])
+@app.route("/search", methods=["GET", "POST"])
 def search():
-    search_date = request.form["date"]
+    if "user" not in session:
+        return redirect("/login")
 
-    response = appointments_table.scan()
-    results = [
-        item for item in response.get("Items", [])
-        if item.get("date") == search_date
-    ]
+    if request.method == "POST":
+        search_date = request.form["date"]
+        response    = appointments_table.scan()
+        results     = [
+            item for item in response.get("Items", [])
+            if item.get("date") == search_date
+        ]
+        return render_template("search_results.html", appointments=results, search_date=search_date)
 
-    return render_template("search_results.html", appointments=results)
+    return render_template("search_results.html", appointments=[], search_date="")
 
 # ----------------------------
 # Health Check
