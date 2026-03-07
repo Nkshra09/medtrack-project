@@ -1,28 +1,56 @@
 {% extends "base.html" %}
-
 {% block content %}
 
-<div class="card">
-    <h2>📅 Book Appointment</h2>
+<div class="dashboard-page">
+    <div style="max-width:560px;margin:0 auto;">
 
-    <form method="POST">
+        <div style="font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:900;color:var(--charcoal);margin-bottom:0.4rem;">📅 Book Appointment</div>
+        <div style="color:var(--gray);font-size:0.9rem;margin-bottom:2rem;">Fill in the details to schedule your appointment</div>
 
-        <!-- Doctor Email -->
-        <label>Doctor Email</label>
-        <input type="email" name="doctor_email" placeholder="Enter Doctor Email" required>
+        <div class="section-card">
+            <div class="section-label">📝 Appointment Details</div>
+            <form method="POST" action="/book_appointment">
 
-        <!-- Appointment Date -->
-        <label>Appointment Date</label>
-        <input type="date" name="date" required>
+                <div class="form-group">
+                    <label>Doctor's Email</label>
+                    <input type="email" name="doctor_email" placeholder="doctor@example.com" required>
+                    <div style="font-size:0.75rem;color:#94a3b8;margin-top:0.3rem;">
+                        💡 Ask your doctor for their registered MedTrack email
+                    </div>
+                </div>
 
-        <!-- Appointment Time -->
-        <label>Appointment Time</label>
-        <input type="time" name="time" required>
+                <div class="two-col">
+                    <div class="form-group">
+                        <label>Appointment Date</label>
+                        <input type="date" name="date" id="dateInput" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Time</label>
+                        <input type="time" name="time" required>
+                    </div>
+                </div>
 
-        <!-- Submit Button -->
-        <button type="submit" class="btn">Book Appointment</button>
+                <div class="form-group">
+                    <label>Reason for Visit</label>
+                    <input type="text" name="reason" placeholder="e.g. Chest pain, Regular checkup, Fever...">
+                </div>
 
-    </form>
+                <div style="display:flex;gap:1rem;margin-top:0.5rem;">
+                    <a href="/patient_dashboard" class="btn btn-outline" style="flex:1;text-align:center;padding:0.8rem;">← Back</a>
+                    <button type="submit" class="btn btn-primary" style="flex:2;border-radius:50px;">✅ Confirm Booking</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="alert alert-info">
+            🔔 <strong>AWS SNS:</strong> Once booked, an automatic email notification will be sent via Amazon SNS to confirm your appointment.
+        </div>
+
+    </div>
 </div>
+
+<script>
+    document.getElementById('dateInput').min = new Date().toISOString().split('T')[0];
+</script>
 
 {% endblock %}
