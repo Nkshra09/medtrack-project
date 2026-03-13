@@ -2,6 +2,8 @@ from flask import Flask, render_template, request, redirect, session
 import boto3
 import uuid
 import logging
+import json
+import os
 
 app = Flask(__name__)
 app.secret_key = "medtrack_secret_key"
@@ -15,17 +17,101 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 
-# ----------------------------
-# AWS Configuration
-# ----------------------------
-REGION        = "ap-south-1"
-SNS_TOPIC_ARN = "arn:aws:sns:us-east-1:879381270777:MedTrackHealth"
+# ============================================================
+#  👇 CHANGE THIS ONE LINE TO SWITCH MODES
+#     LOCAL_MODE = True  → runs locally using JSON files
+#     LOCAL_MODE = False → runs on AWS using DynamoDB + SNS
+# ============================================================
+LOCAL_MODE =False
 
-dynamodb           = boto3.resource('dynamodb', region_name=REGION)
-users_table        = dynamodb.Table('UsersTable')
-appointments_table = dynamodb.Table('AppointmentsTable')
+REGION        = "us-east-1"
+SNS_TOPIC_ARN = "arn:aws:sns:us-east-1:145023131777:MedTrack"
 
-sns = boto3.client('sns', region_name=REGION)
+# ----------------------------
+# Local JSON Files
+# ----------------------------
+USERS_FILE        = "local_users.json"
+APPOINTMENTS_FILE = "local_appointments.json"
+
+# ----------------------------
+# Local Helper Functions
+# ----------------------------
+def _read(file):
+    if not os.path.exists(file):
+        return []
+    with open(file, "r") as f:
+        return json.load(f)
+
+def _write(file, data):
+    with open(file, "w") as f:
+        json.dump(data, f, indent=2)
+
+# ----------------------------
+# Local Table Class
+# (mimics DynamoDB behaviour)
+# ----------------------------
+class LocalTable:
+    def __init__(self, file, key):
+        self.file = file
+        self.key  = key
+
+    def put_item(self, Item):
+        data = _read(self.file)
+        data = [d for d in data if d.get(self.key) != Item.get(self.key)]
+        data.append(Item)
+        _write(self.file, data)
+
+    def get_item(self, Key):
+        data     = _read(self.file)
+        key_name = list(Key.keys())[0]
+        key_val  = list(Key.values())[0]
+        item     = next((d for d in data if d.get(key_name) == key_val), None)
+        return {"Item": item} if item else {}
+
+    def update_item(self, Key, UpdateExpression,
+                    ExpressionAttributeValues, ExpressionAttributeNames=None):
+        data     = _read(self.file)
+        key_name = list(Key.keys())[0]
+        key_val  = list(Key.values())[0]
+        for item in data:
+            if item.get(key_name) == key_val:
+                if "login_count" in UpdateExpression:
+                    item["login_count"] = item.get("login_count", 0) + 1
+                if "diagnosis" in UpdateExpression:
+                    item["diagnosis"] = ExpressionAttributeValues.get(":d", "")
+                    item["status"]    = ExpressionAttributeValues.get(":status", "Completed")
+        _write(self.file, data)
+
+    def scan(self):
+        return {"Items": _read(self.file)}
+
+# ----------------------------
+# Local SNS Class
+# (just prints instead of sending)
+# ----------------------------
+class LocalSNS:
+    def publish(self, TopicArn, Message, Subject):
+        logging.info(f"[LOCAL SNS] {Subject}: {Message}")
+        print(f"\n📧 SNS NOTIFICATION → {Subject}\n   {Message}\n")
+
+# ----------------------------
+# Connect to LOCAL or AWS
+# ----------------------------
+if LOCAL_MODE:
+    users_table        = LocalTable(USERS_FILE,        key="email")
+    appointments_table = LocalTable(APPOINTMENTS_FILE, key="appointment_id")
+    sns                = LocalSNS()
+    print("🟡 LOCAL MODE — using JSON files, no AWS needed")
+else:
+    dynamodb           = boto3.resource('dynamodb', region_name=REGION)
+    users_table        = dynamodb.Table('UsersTable')
+    appointments_table = dynamodb.Table('AppointmentsTable')
+    sns                = boto3.client('sns', region_name=REGION)
+    print("🟢 AWS MODE — connected to DynamoDB + SNS")
+
+# ============================
+# ROUTES
+# ============================
 
 # ----------------------------
 # Home
@@ -40,9 +126,16 @@ def home():
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
+        email = request.form["email"]
+
+        # Check if email already exists
+        existing = users_table.get_item(Key={"email": email})
+        if "Item" in existing:
+            return render_template("register.html", error="Email already registered!")
+
         users_table.put_item(
             Item={
-                "email":       request.form["email"],
+                "email":       email,
                 "name":        request.form["name"],
                 "password":    request.form["password"],
                 "role":        request.form["role"],
@@ -52,7 +145,7 @@ def register():
                 "login_count": 0
             }
         )
-        logging.info(f"New user registered: {request.form['email']}")
+        logging.info(f"New user registered: {email}")
         return redirect("/login")
 
     return render_template("register.html")
@@ -69,13 +162,13 @@ def login():
         response = users_table.get_item(Key={"email": email})
 
         if "Item" in response and response["Item"]["password"] == password:
+            user = response["Item"]
             session["user"]       = email
-            session["role"]       = response["Item"]["role"]
-            session["name"]       = response["Item"]["name"]
-            session["blood_type"] = response["Item"].get("blood_type", "")
-            session["age"]        = response["Item"].get("age", "")
+            session["role"]       = user["role"]
+            session["name"]       = user["name"]
+            session["blood_type"] = user.get("blood_type", "")
+            session["age"]        = user.get("age", "")
 
-            # Track login count
             users_table.update_item(
                 Key={"email": email},
                 UpdateExpression="SET login_count = login_count + :val",
@@ -103,17 +196,20 @@ def logout():
     return redirect("/login")
 
 # ----------------------------
-# Dashboards
+# Patient Dashboard
 # ----------------------------
 @app.route("/patient_dashboard")
 def patient_dashboard():
-    if "user" not in session:
+    if "user" not in session or session.get("role") != "patient":
         return redirect("/login")
     return render_template("patient_dashboard.html")
 
+# ----------------------------
+# Doctor Dashboard
+# ----------------------------
 @app.route("/doctor_dashboard")
 def doctor_dashboard():
-    if "user" not in session:
+    if "user" not in session or session.get("role") != "doctor":
         return redirect("/login")
     return render_template("doctor_dashboard.html")
 
@@ -151,7 +247,7 @@ def book_appointment():
             )
             logging.info("SNS notification sent")
         except Exception as e:
-            logging.warning(f"SNS notification failed: {e}")
+            logging.warning(f"SNS failed: {e}")
 
         logging.info(f"Appointment booked by {session['user']}")
         return redirect("/view_appointment_patient")
@@ -171,7 +267,6 @@ def view_appointment_patient():
         item for item in response.get("Items", [])
         if item.get("patient_email") == session["user"]
     ]
-
     return render_template("view_appointment_patient.html", appointments=appointments)
 
 # ----------------------------
@@ -187,7 +282,6 @@ def view_appointment_doctor():
         item for item in response.get("Items", [])
         if item.get("doctor_email") == session["user"]
     ]
-
     return render_template("view_appointment_doctor.html", appointments=appointments)
 
 # ----------------------------
