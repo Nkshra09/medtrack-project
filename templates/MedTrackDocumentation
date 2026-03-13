@@ -1,0 +1,151 @@
+MedTrack – AI Powered Healthcare Management System using Flask and AWS
+
+1. Project Overview
+MedTrack is a cloud-enabled healthcare management system designed to connect patients and doctors through a simple digital platform. The system allows patients to register, book appointments with doctors, view diagnosis reports, and maintain their medical history. Doctors can manage appointments, provide diagnoses, and track patient records through a centralized dashboard.
+The system also includes an AI Health Assistant that analyzes daily health data such as sleep, mood, stress level, water intake, and activity level to generate a health score and personalized recommendations.
+The platform is built using Flask for backend development, HTML/CSS for frontend interfaces, and JSON-based storage for managing application data.
+Key Features
+• Secure patient and doctor registration and login
+• Appointment booking system
+• Doctor dashboard for managing patients and diagnoses
+• Patient dashboard for viewing medical history
+• AI-based health assistant for wellness analysis
+• Cloud deployment capability using AWS
+Figure 1: MedTrack Home Page
+ 
+2. Technical Architecture
+The system follows a client-server architecture where the frontend interacts with the backend Flask application, which processes requests and manages application data.
+2.1 Frontend
+The frontend of the system is built using:
+• HTML templates rendered using Flask
+• CSS for styling and responsive design
+• JavaScript for interactive components
+• Glassmorphism UI design for modern interface appearance
+The interface includes pages such as:
+• Home Page
+• Patient Login & Registration
+• Doctor Login
+• Patient Dashboard
+• Doctor Dashboard
+• AI Health Assistant
+Figure 2: User Login Page
+ 2.2 Backend
+The backend is implemented using the Flask web framework in Python.
+Key responsibilities of the backend include:
+• Handling HTTP requests and routing
+• Managing user authentication
+• Processing appointment bookings
+• Storing and retrieving patient and doctor data
+• Running the AI health analysis module
+Important backend modules include:
+•app.py — Main Flask application that handles all routes, user authentication, appointment booking, diagnosis submission, and directly communicates with AWS DynamoDB and SNS. All database logic is built into this single file — no separate database module is needed.
+2.3 Database
+The system uses a JSON-based storage system to manage application data.
+Instead of a traditional relational database, structured JSON files are used to simulate database operations.
+Data is stored in the following files:
+• patients.json – Stores patient information
+• doctors.json – Stores doctor profiles and availability
+• appointments.json – Stores appointment booking records
+• diagnoses.json – Stores diagnosis records created by doctors
+The backend uses Python's json module to read and update these files.
+Figure 3: Patient Dashboard
+ 2.4 AI Health Assistant
+The AI Health Assistant evaluates daily health inputs provided by the user such as:
+• Sleep hours
+• Stress level
+• Mood level
+• Water intake
+• Physical activity (steps)
+• Screen time
+• Junk food intake
+Based on these inputs, the system calculates a health score and generates a summary along with personalized health recommendations.
+Figure 4: AI Health Assistant Interface
+ 
+3. Environment Setup
+To run the system locally, the following environment setup is required.
+-Install Python
+Install Python version 3.10 or higher.
+-Install Required Libraries
+Run the following command:
+-pip install flask
+Additional libraries used include:
+• json
+• datetime
+• uuid
+Running the Application
+Start the Flask server using:
+-python app.py
+Then open the application in the browser:
+-http://127.0.0.1:5000
+4. Core Modules & Features
+4.1 User Authentication
+The system provides secure login and registration for both patients and doctors.
+Features include:
+• Patient registration and login
+• Doctor login system
+• Session-based authentication
+• Flash messages for login success or failure
+4.2 Appointment Booking
+Patients can book appointments with available doctors.
+Features include:
+• Selecting doctors based on specialization
+• Viewing available time slots
+• Booking appointments online
+• Tracking appointment status
+Figure 5: Appointment Booking Interface
+ 
+ 
+4.3 Doctor Dashboard
+Doctors have access to a dashboard where they can:
+• View upcoming appointments
+• Access patient details
+• Provide medical diagnoses
+• Update treatment records
+4.4 Patient Dashboard
+Patients can manage their health records through a personal dashboard.
+Features include:
+• Viewing appointment history
+• Checking diagnosis records
+• Managing profile details
+
+4.5 AI Health Assistant
+The AI Health Assistant helps users monitor their daily health condition.
+Features include:
+• Daily health data input
+• Automated health score calculation
+• Health summary generation
+• Personalized health recommendations
+
+5. AWS Integration
+The system is designed to support deployment on Amazon Web Services (AWS).
+Cloud services used include:
+•	AWS EC2 – Hosts the Flask application on an Ubuntu server, making MedTrack accessible online via a public IP address
+•	AWS DynamoDB – NoSQL cloud database that stores all user accounts (UsersTable) and appointment records (AppointmentsTable)
+•	AWS SNS (Simple Notification Service) – Sends automatic email notifications to users whenever a new appointment is booked
+•	AWS IAM (Identity and Access Management) – Manages secure access control, ensuring only the EC2 instance has permission to access DynamoDB and SNS resources
+The cloud deployment enables the system to be accessible online and scalable for multiple users simultaneously.
+
+6. Demo Instructions
+To demonstrate the system:
+1.	Run the application using:
+python app.py
+2.	Open the application in a browser:
+http://127.0.0.1:5000
+3.	Demonstrate the following features:
+• Patient registration and login
+• Doctor login and dashboard
+• Appointment booking process
+• Diagnosis submission by doctor
+• AI Health Assistant analysis
+• Viewing patient medical history
+	
+7. Outcome & Learning
+Through this project, the following skills and concepts were learned:
+• Full-stack web application development using Flask
+• Designing responsive user interfaces using HTML and CSS
+• Implementing authentication and session management
+• Managing application data using JSON-based storage
+• Developing a simple AI-based health recommendation system
+• Understanding cloud deployment concepts using AWS
+The project demonstrates the integration of healthcare management systems with AI-based health monitoring, providing a digital solution for improving patient care and accessibility.
+
